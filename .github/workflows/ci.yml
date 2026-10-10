@@ -1,0 +1,30 @@
+name: CloudOps CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Test health endpoint
+        run: |
+          python -c "from app import app; c = app.test_client(); r = c.get('/health'); assert r.status_code == 200; assert r.get_json()['status'] == 'healthy'; print('Health test passed')"
+
+      - name: Build Docker image
+        run: docker build -t cloudops-web .
